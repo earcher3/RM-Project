@@ -27,7 +27,7 @@ fin.rat$gross_profit_margin = (sales - cost_goods_sold)/revenue
 fin.rat$return_on_assets = net_income/assets
 fin.rat$return_on_equity = net_income/equity
 
-fin.rat[!is.finite(fin.rat)] = 0
+fin.rat[is.na(fin.rat)] = 0
 fin.rat[sapply(fin.rat, is.infinite)] = 0
 
 summary(fin.rat[c(3:14)])
