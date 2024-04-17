@@ -86,3 +86,7 @@ for(i in 1:numrow){
 
 head(sector_dummy)
 colnames(sector_dummy) = "sector_dummy"
+
+#VIF
+vif_values <- vif(model)
+barplot(vif_values, col = "skyblue", main = "Variance Inflation Factor (VIF)")
