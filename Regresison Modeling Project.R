@@ -124,7 +124,7 @@ data1 = dummy_cols(data1, select_columns = c("sub_region", "sector"), remove_fir
 
 #### Train & Test Data ####
 train_split = 0.8
-train = sample(c(TRUE,FALSE), nrow(data1), rep=TRUE, prob = c(train_split, 1-train_split))
+train = sample(c(TRUE,FALSE), nrow(data1), rep = TRUE, prob = c(train_split, 1-train_split))
 train_subsample = data1[train,]
 test_subsample = data1[!train,]
 
@@ -132,9 +132,44 @@ test_subsample = data1[!train,]
 vif_max = 10
 
 fullmod = glm("merger~.-firm_id-company-date-sub_region-sector", family = "binomial", data = train_subsample) # Full model
-fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector", data = train_subsample)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales", data = train_subsample)
 
-vif_selection = data.frame(variable = colnames(train_subsample)[-4], vif = vif(fullmod_linear))
-vif_selection = vif_selection[vif_selection$vif >= vif_max,]
-vif_selection = vif_selection[order(vif_selection$vif, decreasing = T),]
+vif(fullmod_linear)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue", data = train_subsample)
+vif(fullmod_linear)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue-assets", data = train_subsample)
+vif(fullmod_linear)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue-assets-current_liabilities", data = train_subsample)
+vif(fullmod_linear)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue-assets-current_liabilities-equity", data = train_subsample)
+vif(fullmod_linear)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue-assets-current_liabilities-equity-current_assets", data = train_subsample)
+vif(fullmod_linear)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue-assets-current_liabilities-equity-current_assets-inventory", data = train_subsample)
+vif(fullmod_linear)
+
+#### Stepwise Selection ####
+stepwise(fullmod_linear, direction = "backward", criterion = "AIC")
+stepwise(fullmod_linear, direction = "forward", criterion = "AIC")
+stepwise(fullmod_linear, direction = "backward/forward", criterion = "AIC")
+
+#### Performance ####
+fitmodel = glm(merger~current_assets + assets + ebit + inventory + 
+                 fixed_assets + revenue + sub_region_Central_Asia + sub_region_Eastern_Asia + 
+                 sub_region_Melanesia + sub_region_Micronesia + sub_region_South_eastern_Asia + 
+                 sub_region_Southern_Asia + sub_region_Western_Asia + sector_cons_disc + 
+                 sector_cons_staples + sector_energy + sector_healh_care + 
+                 sector_industrials + sector_inf_tech + sector_materials + 
+                 sector_Other + sector_real_estate, family = "binomial", data = train_subsample)
+
+fitmodel = glm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue-assets-current_liabilities-equity-current_assets-inventory", family = "binomial", data = train_subsample)
+
+predmod_test = predict(fitmodel, family = "binomial", newdata = test_subsample, type = "response")
+
+thresh = mean(train_subsample$merger)
+yes_or_no_pred = ifelse(predmod_test > thresh, 1, 0)
+yes_or_no_actual= test_subsample$merger
+confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
+
+
 
