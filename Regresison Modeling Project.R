@@ -133,10 +133,7 @@ vif_max = 10
 
 fullmod = glm("merger~.-firm_id-company-date-sub_region-sector", family = "binomial", data = train_subsample) # Full model
 summary(fullmod)
-fullmod_linear1 = lm("merger~.-firm_id-company-date-sub_region-sector-sales", data = train_subsample)
-summary(fullmod_linear1)
-
-fullmod_linear = lm(merger~.-firm_id-company-date, data = train_subsample)
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales", data = train_subsample)
 
 vif(fullmod_linear)
 fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector-sales-revenue", data = train_subsample)
@@ -170,14 +167,13 @@ fitmodel1 = glm(merger~current_assets + assets + ebit + inventory +
                  sector_industrials + sector_inf_tech + sector_materials + 
                  sector_Other + sector_real_estate, family = "binomial", data = train_subsample)
 
-#vif and then steppwise
+# vif and then stepwise
 fitmodel2 = glm(merger~ebit + sub_region_Central_Asia + sub_region_Eastern_Asia + 
                   sub_region_Melanesia + sub_region_Micronesia + sub_region_South_eastern_Asia + 
                   sub_region_Southern_Asia + sub_region_Western_Asia + sector_cons_disc + 
                   sector_cons_staples + sector_energy + sector_healh_care + 
                   sector_industrials + sector_inf_tech + sector_materials + 
                   sector_Other + sector_real_estate, family = "binomial", data = train_subsample)
-
 
 predmod_test1 = predict(fitmodel1, family = "binomial", newdata = test_subsample, type = "response")
 
@@ -192,6 +188,5 @@ thresh = mean(train_subsample$merger)
 yes_or_no_pred = ifelse(predmod_test > thresh, 1, 0)
 yes_or_no_actual= test_subsample$merger
 confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
-
 
 
