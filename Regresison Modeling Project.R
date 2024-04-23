@@ -1,13 +1,16 @@
-setwd("C:/Users/EKArc/OneDrive/Documents/2024 Spring Classes/Regression Modeling/Data")
-data=read.csv("Data.csv",header=TRUE,sep=",")
-names(data)
-attach(data)
+
+setwd("/Users/miwi/Documents/r/data")
 
 library(caret)
 library(Rcmdr)
 library(olsrr)
 library(dummy)
 library(fastDummies)
+
+data = read.csv("Data.csv", header = TRUE)
+
+names(data)
+attach(data)
 
 #### Clean Data ####
 apply(is.na(data), 2, mean)
@@ -22,84 +25,79 @@ for(i in 1:nrow(data1)){
 
 aggregate(data1$sector, list(data1$sector), length)
 
-# use for financial ratios
-data1 = subset(data1, select = -c(X)) 
+data1 = subset(data1, select = -c(20)) 
 data1 = na.omit(data1)
 
 for(i in 1:nrow(data1)){
   if(data1$sales[i] < 0){
-    data1$sales[i] = abs(data$sales[i])
+    data1$sales[i] = abs(data1$sales[i])
   }
   if(data1$assets[i] < 0){
-    data1$assets[i] = abs(data$assets[i])
+    data1$assets[i] = abs(data1$assets[i])
   }
   if(data1$cost_goods_sold[i] < 0){
-    data1$cost_goods_sold[i] = abs(data$cost_goods_sold[i])
+    data1$cost_goods_sold[i] = abs(data1$cost_goods_sold[i])
   }
   if(data1$equity[i] < 0){
-    data1$equity[i] = abs(data$equity[i])
+    data1$equity[i] = abs(data1$equity[i])
   }
   if(data1$revenue[i] < 0){
-    data1$revenue[i] = abs(data$revenue[i])
+    data1$revenue[i] = abs(data1$revenue[i])
   }
   if(data1$inventory[i] < 0){
     data1$inventory[i] = abs(data1$inventory[i])
   }
   if(data1$working_capital[i] < 0){
-    data1$working_capital[i] = abs(data$working_capital[i])
+    data1$working_capital[i] = abs(data1$working_capital[i])
   }
   if(data1$fixed_assets[i] < 0){
-    data1$fixed_assets[i] = abs(data$fixed_assets[i])
+    data1$fixed_assets[i] = abs(data1$fixed_assets[i])
   }
   if(data1$debt_short_term[i] < 0){
-    data1$debt[i] = abs(data$debt_short_term[i])
+    data1$debt_short_term[i] = abs(data1$debt_short_term[i])
   }
   if(data1$debt_long_term[i] < 0){
-    data1$debt[i] = abs(data$debt_long_term[i])
+    data1$debt_long_term[i] = abs(data1$debt_long_term[i])
   }
 }
 
 for(i in 1:nrow(data1)){
-  if(data1$sales[i] = 0){
+  if(data1$sales[i] == 0){
     data1$sales[i] = NA
   }
-  if(data1$assets[i] = 0){
+  if(data1$assets[i] == 0){
     data1$assets[i] = NA
   }
-  if(data1$cost_goods_sold[i] = 0){
+  if(data1$cost_goods_sold[i] == 0){
     data1$cost_goods_sold[i] = NA
   }
-  if(data1$equity[i] = 0){
+  if(data1$equity[i] == 0){
     data1$equity[i] = NA
   }
-  if(data1$revenue[i] = 0){
+  if(data1$revenue[i] == 0){
     data1$revenue[i] = NA
   }
-  if(data1$inventory[i] = 0){
+  if(data1$inventory[i] == 0){
     data1$inventory[i] = NA
   }
-  if(data1$working_capital[i] = 0){
+  if(data1$working_capital[i] == 0){
     data1$working_capital[i] = NA
   }
-  if(data1$fixed_assets[i] = 0){
+  if(data1$fixed_assets[i] == 0){
     data1$fixed_assets[i] = NA
   }
-  if(data1$debt[i] = 0){
-    data1$debt[i] = NA
+  if(data1$debt_short_term[i] == 0){
+    data1$debt_short_term[i] = NA
   }
-  if(data1$debt[i] = 0){
-    data1$debt[i] = NA
+  if(data1$debt_long_term[i] == 0){
+    data1$debt_long_term[i] = NA
+  }
+  if(data1$interest_expense[i] == 0){
+    data1$interest_expense[i] = NA
   }
 }
 
-
-
 data1 = na.omit(data1)
-
-# use for regression
-data2 = subset(data1) 
-apply(is.na(data), 2, mean)
-
 
 #### Financial Ratios ####
 ratios = subset(data1, select = c(1,2))
@@ -122,22 +120,21 @@ ratios$return_on_equity = data1$net_income/data1$equity
 summary(ratios[c(3:14)])
 
 #### Dummy Variables ####
-data2 = dummy_cols(data2, select_columns = c("sub_region", "sector"), remove_first_dummy = TRUE)
+data1 = dummy_cols(data1, select_columns = c("sub_region", "sector"), remove_first_dummy = TRUE)
 
-#Data Split
+#### Train & Test Data ####
+train_split = 0.8
+train = sample(c(TRUE,FALSE), nrow(data1), rep=TRUE, prob = c(train_split, 1-train_split))
+train_subsample = data1[train,]
+test_subsample = data1[!train,]
 
-train_split=0.8
-train=sample(c(TRUE,FALSE), nrow(data1),rep=TRUE,prob=c(train_split,1-train_split))
-train_subsample=data1[train,]
-test_subsample=data1[!train,]
+#### VIF ####
+vif_max = 10
 
-#VIF
-vif_max=10
-fullmod=glm("merger~.",family = "binomial",data = train_subsample) # Full model
-fullmod_linear=lm("merger~.",data=data_set)
-vif_selection=data.frame(variable=colnames(data_set)[-86],vif=vif(fullmod_linear))
-vif_selection=vif_selection[vif_selection$vif>=vif_max,]
-vif_selection=vif_selection[order(vif_selection$vif,decreasing = T),]
+fullmod = glm("merger~.-firm_id-company-date-sub_region-sector", family = "binomial", data = train_subsample) # Full model
+fullmod_linear = lm("merger~.-firm_id-company-date-sub_region-sector", data = train_subsample)
 
-vif_values <- vif(model)
-barplot(vif_values, col = "skyblue", main = "Variance Inflation Factor (VIF)")
+vif_selection = data.frame(variable = colnames(train_subsample)[-4], vif = vif(fullmod_linear))
+vif_selection = vif_selection[vif_selection$vif >= vif_max,]
+vif_selection = vif_selection[order(vif_selection$vif, decreasing = T),]
+
