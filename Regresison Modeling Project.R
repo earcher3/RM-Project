@@ -171,5 +171,24 @@ yes_or_no_pred = ifelse(predmod_test > thresh, 1, 0)
 yes_or_no_actual= test_subsample$merger
 confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
 
+#### Performance ####
+fitmodel = glm(merger~current_assets + assets + ebit + inventory + 
+                 fixed_assets + revenue + sub_region_Central_Asia + sub_region_Eastern_Asia + 
+                 sub_region_Melanesia + sub_region_Micronesia + sub_region_South_eastern_Asia + 
+                 sub_region_Southern_Asia + sub_region_Western_Asia + sector_cons_disc + 
+                 sector_cons_staples + sector_energy + sector_healh_care + 
+                 sector_industrials + sector_inf_tech + sector_materials + 
+                 sector_Other + sector_real_estate, family = "binomial", data = train_subsample)
 
+
+fitmodel = glm(merger ~ current_assets + assets + cost_goods_sold + 
+                 debt_long_term + inventory + fixed_assets + revenue + interest_expense + 
+                 net_income + sub_region + sector, family = "binomial", data = train_subsample)
+
+predmod_test = predict(fitmodel, family = "binomial", newdata = test_subsample, type = "response")
+
+thresh = mean(train_subsample$merger)
+yes_or_no_pred = ifelse(predmod_test > thresh, 1, 0)
+yes_or_no_actual= test_subsample$merger
+confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
 
