@@ -145,25 +145,17 @@ yes_or_no_pred = ifelse(predmod_test2 > thresh, 1, 0)
 yes_or_no_actual= test_subsample2$merger
 confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
 
-#### Model 2 (lasso) ####
-y = train_subsample$merger
-x = data.matrix(train_subsample[,c('earnings_per_share','current_assets','assets',
-                                   'equity','cost_goods_sold','debt_short_term',
-                                   'debt_long_term','ebit','inventory','current_liabilities',
-                                   'fixed_assets','revenue','sales','working_capital',
-                                   'interest_expense','net_income','sub_region_Central_Asia',
-                                   'sub_region_Eastern_Asia','sub_region_Melanesia',
-                                   'sub_region_Micronesia','sub_region_South_eastern_Asia',
-                                   'sub_region_Southern_Asia','sub_region_Western_Asia',
-                                   'sector_cons_disc','sector_cons_staples','sector_energy',
-                                   'sector_healh_care','sector_industrials','sector_inf_tech',
-                                   'sector_materials','sector_Other','sector_real_estate' )])
+#### Model 3 (Lasso using data1) ####
+# removed firm_id, company, date, merger, and all variables with high VIF from fullmod_linear
+X = as.matrix(train_subsample[, -c(1:4,6,17,11)]) 
 
-cv_model = cv.glmnet(x,y,alpha =1)
-best_lambda = cv_model$lambda.min
-best_lambda
+lasso_model = cv.glmnet(x = X, y = train_subsample$merger, family= "binomial", alpha = 1)
 
-Best_lasso_model = glmnet(x, y, alpha =1 ,lambda = best_lambda)
-coef(Best_lasso_model)
-### Lasso Performance ###
-#idk :(
+new_data = as.matrix(test_subsample[,-c(1:4,6,17,11)])
+
+predmod_test3 = predict(lasso_model, newx = new_data, type = "response")
+
+thresh = mean(train_subsample$merger)
+yes_or_no_pred = ifelse(predmod_test3 > thresh, 1, 0)
+yes_or_no_actual= test_subsample$merger
+confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
