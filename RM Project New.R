@@ -159,3 +159,18 @@ thresh = mean(train_subsample$merger)
 yes_or_no_pred = ifelse(predmod_test3 > thresh, 1, 0)
 yes_or_no_actual= test_subsample$merger
 confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
+
+#### Model 4 (Lasso using data2) ####
+X2 = as.matrix(train_subsample2[, -c(1:4,6,11)]) 
+Y2 = train_subsample2$merger
+
+lasso_model2 = cv.glmnet(x = X2, y = Y2, family= "binomial", alpha = 1)
+
+new_data2 = as.matrix(test_subsample2[,-c(1:4,6,11)])
+
+predmod_test4 = predict(lasso_model2, family= "binomial", newx = new_data2, type = "response")
+
+thresh = mean(train_subsample2$merger)
+yes_or_no_pred = ifelse(predmod_test4 > thresh, 1, 0)
+yes_or_no_actual= test_subsample2$merger
+confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
