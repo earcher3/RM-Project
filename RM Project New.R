@@ -1,4 +1,3 @@
-
 setwd("/Users/miwi/Documents/r/data")
 
 library(caret)
@@ -79,6 +78,71 @@ predmod_test1 = predict(fitmodel1, family = "binomial", newdata = test_subsample
 thresh = mean(train_subsample$merger)
 yes_or_no_pred = ifelse(predmod_test1 > thresh, 1, 0)
 yes_or_no_actual= test_subsample$merger
+confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
+
+#### Model 2 (remove variables with too many NAs) ####
+apply(is.na(data), 2, mean)
+data2 = subset(data, select = -c(20,5,21)) 
+
+for(i in 1:nrow(data2)){
+  if(data2$sector[i] == "#N/A"){
+    data2$sector[i] = "Other"
+  }
+}
+
+data2 = na.omit(data2)
+
+data2 = data2[data2$sales > 0 & data2$assets > 0 & data2$cost_goods_sold > 0 & data2$equity > 0 & data2$revenue > 0 & data2$inventory > 0 & data2$working_capital > 0 & data2$fixed_assets > 0 & data2$debt_short_term > 0 & data2$debt_long_term > 0 & data2$interest_expense > 0,]
+
+ratios2 = subset(data2, select = c(1:4,20,19))
+
+ratios2$inventory_turnover = data2$cost_goods_sold/data2$inventory
+ratios2$asset_turnover = data2$revenue/data2$sales
+ratios2$fixed_asset_turnover = data2$revenue/data2$fixed_assets
+ratios2$working_capital_turnover = data2$revenue/data2$working_capital
+ratios2$current_ratio = data2$current_assets/data2$current_liabilities
+ratios2$quick_ratio = (data2$current_assets - data2$inventory)/data2$current_liabilities
+ratios2$debt_to_equity = (data2$debt_short_term+data2$debt_long_term)/data2$equity
+ratios2$debt_to_assets = (data2$debt_short_term+data2$debt_long_term)/data2$assets
+ratios2$financial_leverage = data2$assets/data2$equity
+ratios2$interest_coverage = data2$ebit/data2$interest_expense
+ratios2$gross_profit_margin = (data2$sales - data2$cost_goods_sold)/data2$revenue
+
+ratios2 = dummy_cols(ratios2, select_columns = c("sub_region", "sector"), remove_first_dummy = TRUE, remove_selected_columns = TRUE)
+
+train_split2 = 0.8
+train2 = sample(c(TRUE,FALSE), nrow(ratios2), rep = TRUE, prob = c(train_split2, 1-train_split2))
+train_subsample2 = ratios2[train2,]
+test_subsample2 = ratios2[!train2,]
+
+fullmod2 = glm("merger~.-firm_id-company-date", family = "binomial", data = train_subsample2) 
+summary(fullmod2)
+
+fullmod_linear2 = lm("merger~.-firm_id-company-date", data = train_subsample2)
+summary(fullmod_linear2)
+
+fullmod_linear2 = lm("merger~.-firm_id-company-date-asset_turnover", data = train_subsample2)
+
+vif(fullmod_linear2)
+fullmod_linear2 = lm("merger~.-firm_id-company-date-asset_turnover-debt_to_equity", data = train_subsample2)
+vif(fullmod_linear2)
+
+stepwise(fullmod_linear2, direction = "backward", criterion = "AIC")
+
+fitmodel2 = glm(merger ~ fixed_asset_turnover + current_ratio + 
+                  quick_ratio + debt_to_assets + sub_region_Central_Asia + 
+                  sub_region_Eastern_Asia + sub_region_Melanesia + sub_region_Micronesia + 
+                  sub_region_South_eastern_Asia + sub_region_Southern_Asia + 
+                  sub_region_Western_Asia + sector_cons_disc + sector_cons_staples + 
+                  sector_energy + sector_healh_care + sector_industrials + 
+                  sector_inf_tech + sector_materials + sector_Other + sector_real_estate, 
+                data = train_subsample2)
+
+predmod_test2 = predict(fitmodel2, family = "binomial", newdata = test_subsample2, type = "response")
+
+thresh = mean(train_subsample2$merger)
+yes_or_no_pred = ifelse(predmod_test2 > thresh, 1, 0)
+yes_or_no_actual= test_subsample2$merger
 confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
 
 #### Model 2 (lasso) ####
