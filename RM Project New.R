@@ -153,7 +153,7 @@ lasso_model = cv.glmnet(x = X, y = train_subsample$merger, family= "binomial", a
 
 new_data = as.matrix(test_subsample[,-c(1:4,6,17,11)])
 
-predmod_test3 = predict(lasso_model, newx = new_data, type = "response")
+predmod_test3 = predict(lasso_model, family= "binomial", newx = new_data, type = "response")
 
 thresh = mean(train_subsample$merger)
 yes_or_no_pred = ifelse(predmod_test3 > thresh, 1, 0)
