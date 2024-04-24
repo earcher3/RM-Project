@@ -81,4 +81,25 @@ yes_or_no_pred = ifelse(predmod_test1 > thresh, 1, 0)
 yes_or_no_actual= test_subsample$merger
 confusionMatrix(as.factor(yes_or_no_pred), as.factor(yes_or_no_actual))
 
-#### Model 2 ####
+#### Model 2 (lasso) ####
+y = train_subsample$merger
+x = data.matrix(train_subsample[,c('earnings_per_share','current_assets','assets',
+                                   'equity','cost_goods_sold','debt_short_term',
+                                   'debt_long_term','ebit','inventory','current_liabilities',
+                                   'fixed_assets','revenue','sales','working_capital',
+                                   'interest_expense','net_income','sub_region_Central_Asia',
+                                   'sub_region_Eastern_Asia','sub_region_Melanesia',
+                                   'sub_region_Micronesia','sub_region_South_eastern_Asia',
+                                   'sub_region_Southern_Asia','sub_region_Western_Asia',
+                                   'sector_cons_disc','sector_cons_staples','sector_energy',
+                                   'sector_healh_care','sector_industrials','sector_inf_tech',
+                                   'sector_materials','sector_Other','sector_real_estate' )])
+
+cv_model = cv.glmnet(x,y,alpha =1)
+best_lambda = cv_model$lambda.min
+best_lambda
+
+Best_lasso_model = glmnet(x, y, alpha =1 ,lambda = best_lambda)
+coef(Best_lasso_model)
+### Lasso Performance ###
+#idk :(
