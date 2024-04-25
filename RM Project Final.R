@@ -74,6 +74,7 @@ stepwise(fullmod_linear, direction = "backward", criterion = "AIC")
 
 #### Performance ####
 fitmodel1 = glm(merger ~ fixed_asset_turnover + current_ratio + quick_ratio + debt_to_assets + sub_region_Central_Asia + sub_region_Eastern_Asia + sub_region_Melanesia + sub_region_Micronesia + sub_region_South_eastern_Asia + sub_region_Southern_Asia + sub_region_Western_Asia + sector_cons_disc + sector_cons_staples + sector_energy + sector_healh_care + sector_industrials + sector_inf_tech + sector_materials + sector_Other + sector_real_estate, family = "binomial", data = train_subsample)
+summary(fitmodel1)
 
 predmod_test1 = predict(fitmodel1, family = "binomial", newdata = test_subsample, type = "response")
 
@@ -141,6 +142,7 @@ fitmodel2 = glm(merger ~ fixed_asset_turnover + current_ratio +
                 data = train_subsample2)
 
 predmod_test2 = predict(fitmodel2, family = "binomial", newdata = test_subsample2, type = "response")
+summary(fitmodel2)
 
 thresh = mean(train_subsample2$merger)
 yes_or_no_pred = ifelse(predmod_test2 > thresh, 1, 0)
